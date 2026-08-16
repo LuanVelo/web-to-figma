@@ -1,0 +1,621 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		45E962913032462E0049557E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45E962903032462E0049557E /* AppDelegate.swift */; };
+		45E962953032462E0049557E /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = 45E962933032462E0049557E /* Main.html */; };
+		45E962973032462E0049557E /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 45E962963032462E0049557E /* Icon.png */; };
+		45E962993032462E0049557E /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = 45E962983032462E0049557E /* Style.css */; };
+		45E9629B3032462E0049557E /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = 45E9629A3032462E0049557E /* Script.js */; };
+		45E9629D3032462E0049557E /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45E9629C3032462E0049557E /* ViewController.swift */; };
+		45E962A03032462E0049557E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 45E9629E3032462E0049557E /* Main.storyboard */; };
+		45E962A23032462F0049557E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 45E962A13032462F0049557E /* Assets.xcassets */; };
+		45E962A93032462F0049557E /* web to figma Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 45E962A83032462F0049557E /* web to figma Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		45E962AE3032462F0049557E /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45E962AD3032462F0049557E /* SafariWebExtensionHandler.swift */; };
+		45E962C13032462F0049557E /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 45E962BA3032462F0049557E /* icon.png */; };
+		45E962C23032462F0049557E /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = 45E962BB3032462F0049557E /* popup.js */; };
+		45E962C33032462F0049557E /* extractor.js in Resources */ = {isa = PBXBuildFile; fileRef = 45E962BC3032462F0049557E /* extractor.js */; };
+		45E962C43032462F0049557E /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = 45E962BD3032462F0049557E /* background.js */; };
+		45E962C53032462F0049557E /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = 45E962BE3032462F0049557E /* popup.html */; };
+		45E962C63032462F0049557E /* collect.js in Resources */ = {isa = PBXBuildFile; fileRef = 45E962BF3032462F0049557E /* collect.js */; };
+		45E962C73032462F0049557E /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 45E962C03032462F0049557E /* manifest.json */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		45E962AA3032462F0049557E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45E962853032462E0049557E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45E962A73032462F0049557E;
+			remoteInfo = "web to figma Extension";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		45E962B53032462F0049557E /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				45E962A93032462F0049557E /* web to figma Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		45E9628D3032462E0049557E /* web to figma.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "web to figma.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		45E962903032462E0049557E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		45E962943032462E0049557E /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
+		45E962963032462E0049557E /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		45E962983032462E0049557E /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		45E9629A3032462E0049557E /* Script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Script.js; sourceTree = "<group>"; };
+		45E9629C3032462E0049557E /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		45E9629F3032462E0049557E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		45E962A13032462F0049557E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		45E962A33032462F0049557E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		45E962A83032462F0049557E /* web to figma Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "web to figma Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		45E962AD3032462F0049557E /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		45E962AF3032462F0049557E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		45E962BA3032462F0049557E /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = icon.png; path = ../../../extension/icon.png; sourceTree = "<group>"; };
+		45E962BB3032462F0049557E /* popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = popup.js; path = ../../../extension/popup.js; sourceTree = "<group>"; };
+		45E962BC3032462F0049557E /* extractor.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = extractor.js; path = ../../../extension/extractor.js; sourceTree = "<group>"; };
+		45E962BD3032462F0049557E /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = background.js; path = ../../../extension/background.js; sourceTree = "<group>"; };
+		45E962BE3032462F0049557E /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = ../../../extension/popup.html; sourceTree = "<group>"; };
+		45E962BF3032462F0049557E /* collect.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = collect.js; path = ../../../extension/collect.js; sourceTree = "<group>"; };
+		45E962C03032462F0049557E /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../../extension/manifest.json; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		45E9628A3032462E0049557E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45E962A53032462F0049557E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		45E962843032462E0049557E = {
+			isa = PBXGroup;
+			children = (
+				45E9628F3032462E0049557E /* web to figma */,
+				45E962AC3032462F0049557E /* web to figma Extension */,
+				45E9628E3032462E0049557E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		45E9628E3032462E0049557E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				45E9628D3032462E0049557E /* web to figma.app */,
+				45E962A83032462F0049557E /* web to figma Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		45E9628F3032462E0049557E /* web to figma */ = {
+			isa = PBXGroup;
+			children = (
+				45E962903032462E0049557E /* AppDelegate.swift */,
+				45E9629C3032462E0049557E /* ViewController.swift */,
+				45E9629E3032462E0049557E /* Main.storyboard */,
+				45E962A13032462F0049557E /* Assets.xcassets */,
+				45E962A33032462F0049557E /* Info.plist */,
+				45E962923032462E0049557E /* Resources */,
+			);
+			path = "web to figma";
+			sourceTree = "<group>";
+		};
+		45E962923032462E0049557E /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				45E962933032462E0049557E /* Main.html */,
+				45E962963032462E0049557E /* Icon.png */,
+				45E962983032462E0049557E /* Style.css */,
+				45E9629A3032462E0049557E /* Script.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		45E962AC3032462F0049557E /* web to figma Extension */ = {
+			isa = PBXGroup;
+			children = (
+				45E962B93032462F0049557E /* Resources */,
+				45E962AD3032462F0049557E /* SafariWebExtensionHandler.swift */,
+				45E962AF3032462F0049557E /* Info.plist */,
+			);
+			path = "web to figma Extension";
+			sourceTree = "<group>";
+		};
+		45E962B93032462F0049557E /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				45E962BA3032462F0049557E /* icon.png */,
+				45E962BB3032462F0049557E /* popup.js */,
+				45E962BC3032462F0049557E /* extractor.js */,
+				45E962BD3032462F0049557E /* background.js */,
+				45E962BE3032462F0049557E /* popup.html */,
+				45E962BF3032462F0049557E /* collect.js */,
+				45E962C03032462F0049557E /* manifest.json */,
+			);
+			name = Resources;
+			path = "web to figma Extension";
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		45E9628C3032462E0049557E /* web to figma */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 45E962B63032462F0049557E /* Build configuration list for PBXNativeTarget "web to figma" */;
+			buildPhases = (
+				45E962893032462E0049557E /* Sources */,
+				45E9628A3032462E0049557E /* Frameworks */,
+				45E9628B3032462E0049557E /* Resources */,
+				45E962B53032462F0049557E /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				45E962AB3032462F0049557E /* PBXTargetDependency */,
+			);
+			name = "web to figma";
+			packageProductDependencies = (
+			);
+			productName = "web to figma";
+			productReference = 45E9628D3032462E0049557E /* web to figma.app */;
+			productType = "com.apple.product-type.application";
+		};
+		45E962A73032462F0049557E /* web to figma Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 45E962B23032462F0049557E /* Build configuration list for PBXNativeTarget "web to figma Extension" */;
+			buildPhases = (
+				45E962A43032462F0049557E /* Sources */,
+				45E962A53032462F0049557E /* Frameworks */,
+				45E962A63032462F0049557E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "web to figma Extension";
+			packageProductDependencies = (
+			);
+			productName = "web to figma Extension";
+			productReference = 45E962A83032462F0049557E /* web to figma Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		45E962853032462E0049557E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2640;
+				LastUpgradeCheck = 2640;
+				TargetAttributes = {
+					45E9628C3032462E0049557E = {
+						CreatedOnToolsVersion = 26.4;
+					};
+					45E962A73032462F0049557E = {
+						CreatedOnToolsVersion = 26.4;
+					};
+				};
+			};
+			buildConfigurationList = 45E962883032462E0049557E /* Build configuration list for PBXProject "web to figma" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 45E962843032462E0049557E;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 45E9628E3032462E0049557E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				45E9628C3032462E0049557E /* web to figma */,
+				45E962A73032462F0049557E /* web to figma Extension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		45E9628B3032462E0049557E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45E962973032462E0049557E /* Icon.png in Resources */,
+				45E962A03032462E0049557E /* Main.storyboard in Resources */,
+				45E9629B3032462E0049557E /* Script.js in Resources */,
+				45E962953032462E0049557E /* Main.html in Resources */,
+				45E962A23032462F0049557E /* Assets.xcassets in Resources */,
+				45E962993032462E0049557E /* Style.css in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45E962A63032462F0049557E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45E962C43032462F0049557E /* background.js in Resources */,
+				45E962C73032462F0049557E /* manifest.json in Resources */,
+				45E962C53032462F0049557E /* popup.html in Resources */,
+				45E962C13032462F0049557E /* icon.png in Resources */,
+				45E962C63032462F0049557E /* collect.js in Resources */,
+				45E962C33032462F0049557E /* extractor.js in Resources */,
+				45E962C23032462F0049557E /* popup.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		45E962893032462E0049557E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45E9629D3032462E0049557E /* ViewController.swift in Sources */,
+				45E962913032462E0049557E /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45E962A43032462F0049557E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45E962AE3032462F0049557E /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		45E962AB3032462F0049557E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45E962A73032462F0049557E /* web to figma Extension */;
+			targetProxy = 45E962AA3032462F0049557E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		45E962933032462E0049557E /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				45E962943032462E0049557E /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		45E9629E3032462E0049557E /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				45E9629F3032462E0049557E /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		45E962B03032462F0049557E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		45E962B13032462F0049557E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		45E962B33032462F0049557E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "web to figma Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "web to figma Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.luanvelo.web-to-figma.Extension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		45E962B43032462F0049557E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "web to figma Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "web to figma Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.luanvelo.web-to-figma.Extension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		45E962B73032462F0049557E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "web to figma/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "web to figma";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.luanvelo.web-to-figma";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		45E962B83032462F0049557E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "web to figma/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "web to figma";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.luanvelo.web-to-figma";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		45E962883032462E0049557E /* Build configuration list for PBXProject "web to figma" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45E962B03032462F0049557E /* Debug */,
+				45E962B13032462F0049557E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		45E962B23032462F0049557E /* Build configuration list for PBXNativeTarget "web to figma Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45E962B33032462F0049557E /* Debug */,
+				45E962B43032462F0049557E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		45E962B63032462F0049557E /* Build configuration list for PBXNativeTarget "web to figma" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45E962B73032462F0049557E /* Debug */,
+				45E962B83032462F0049557E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 45E962853032462E0049557E /* Project object */;
+}

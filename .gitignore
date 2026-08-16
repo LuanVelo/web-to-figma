@@ -1,0 +1,16 @@
+# dependências
+node_modules/
+
+# capturas geradas
+*.w2f
+*.preview.png
+*.compare.html
+
+# builds do Safari (o app sai em /tmp e vai para /Applications)
+safari/build/
+safari/**/xcuserdata/
+safari/**/*.xcworkspace/xcuserdata/
+DerivedData/
+
+# macOS
+.DS_Store

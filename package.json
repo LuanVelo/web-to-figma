@@ -1,0 +1,19 @@
+{
+  "name": "web-to-figma",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Importa paginas web para o Figma como layers editaveis, rodando 100% local",
+  "scripts": {
+    "start": "node server/index.js",
+    "postinstall": "playwright install chromium",
+    "preview": "node tools/preview.mjs",
+    "simulate": "node tools/simulate.mjs",
+    "sync": "node tools/sync-extension.mjs",
+    "prestart": "node tools/sync-extension.mjs",
+    "safari": "node tools/build-safari.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}

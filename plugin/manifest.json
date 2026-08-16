@@ -1,0 +1,13 @@
+{
+  "name": "web to figma",
+  "id": "web-to-figma-local",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "reasoning": "O modo Arquivo nao usa rede. O modo URL fala apenas com o servidor de captura local, permitido so em desenvolvimento.",
+    "devAllowedDomains": ["http://localhost:3579"]
+  }
+}

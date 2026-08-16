@@ -1,0 +1,71 @@
+<!doctype html>
+<meta charset="utf-8" />
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fff;
+    --fg: #1e1e1e;
+    --muted: #8c8c8c;
+    --border: #e6e6e6;
+    --accent: #0d99ff;
+    --ok: #14ae5c;
+    --err: #f24822;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #2c2c2c; --fg: #fff; --muted: #9b9b9b; --border: #444; }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    width: 300px;
+    margin: 0;
+    padding: 14px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 12px/1.45 -apple-system, BlinkMacSystemFont, Inter, sans-serif;
+  }
+
+  h1 { margin: 0 0 2px; font-size: 13px; }
+  .site { color: var(--muted); font-size: 11px; word-break: break-all; margin-bottom: 12px; }
+
+  button {
+    width: 100%;
+    padding: 9px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:disabled { opacity: .5; cursor: default; }
+
+  label.opt { display: flex; align-items: center; gap: 6px; margin: 10px 0; cursor: pointer; }
+
+  .status {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    min-height: 32px;
+  }
+  .status.ok { color: var(--ok); }
+  .status.err { color: var(--err); }
+  .hint { margin-top: 4px; color: var(--muted); font-size: 11px; }
+</style>
+
+<h1>Capturar para o Figma</h1>
+<div class="site" id="site">…</div>
+
+<label class="opt">
+  <input type="checkbox" id="simplify" checked />
+  Simplificar camadas
+</label>
+
+<button id="go">Capturar página</button>
+
+<div class="status" id="status">Captura a página como ela está agora, no tamanho atual da janela.</div>
+
+<script src="popup.js"></script>

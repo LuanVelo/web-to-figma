@@ -1,0 +1,456 @@
+<!-- UI do plugin. Roda num iframe, e a unica parte com acesso a rede. -->
+<style>
+  :root {
+    --bg: #ffffff;
+    --fg: #1e1e1e;
+    --muted: #8c8c8c;
+    --border: #e6e6e6;
+    --field: #f5f5f5;
+    --accent: #0d99ff;
+    --accent-fg: #ffffff;
+    --ok: #14ae5c;
+    --err: #f24822;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #2c2c2c;
+      --fg: #ffffff;
+      --muted: #9b9b9b;
+      --border: #444444;
+      --field: #383838;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 16px;
+    background: var(--bg);
+    color: var(--fg);
+    font: 11px/1.4 Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  label { display: block; font-weight: 600; margin-bottom: 6px; }
+
+  .row { display: flex; gap: 8px; }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--field);
+    color: var(--fg);
+    font: inherit;
+    outline: none;
+  }
+  input[type="text"]:focus { border-color: var(--accent); }
+
+  button {
+    padding: 8px 16px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button:disabled { opacity: .45; cursor: default; }
+
+  fieldset {
+    margin: 16px 0 0;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  legend { padding: 0 4px; color: var(--muted); font-weight: 600; }
+
+  .viewports { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .vp {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .vp.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .vp input[type="number"] {
+    width: 46px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: right;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  .vp input::-webkit-outer-spin-button,
+  .vp input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  .opt { display: flex; align-items: center; gap: 7px; margin: 7px 0; cursor: pointer; }
+  .opt:first-child { margin-top: 0; }
+  .opt:last-child { margin-bottom: 0; }
+  .opt span { color: var(--fg); }
+  .opt small { color: var(--muted); }
+
+  footer {
+    position: sticky;
+    bottom: 0;
+    margin-top: 16px;
+    padding-top: 12px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+  }
+
+  .status { display: flex; align-items: center; gap: 6px; color: var(--muted); margin-bottom: 10px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex: none; }
+  .dot.ok { background: var(--ok); }
+  .dot.err { background: var(--err); }
+
+  .bar { height: 3px; border-radius: 2px; background: var(--field); overflow: hidden; margin-bottom: 10px; display: none; }
+  .bar.on { display: block; }
+  .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+
+  .hint { color: var(--muted); margin-top: 10px; line-height: 1.5; }
+  code { background: var(--field); padding: 1px 4px; border-radius: 3px; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+  .tab {
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .tab.on { background: var(--field); color: var(--fg); }
+
+  .drop {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 30px 16px;
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    text-align: center;
+  }
+  .drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .drop span { color: var(--muted); }
+
+  button.ghost {
+    margin-top: 4px;
+    padding: 6px 14px;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--border);
+  }
+</style>
+
+<div class="tabs">
+  <button class="tab on" data-tab="file">Arquivo</button>
+  <button class="tab" data-tab="url">URL</button>
+</div>
+
+<section id="panel-file">
+  <div class="drop" id="drop">
+    <strong>Solte aqui o arquivo .w2f</strong>
+    <span>gerado pela extensão do navegador</span>
+    <button class="ghost" id="browse">Escolher arquivo</button>
+    <input type="file" id="file" accept=".w2f,.json" hidden />
+  </div>
+  <p class="hint">Não precisa de servidor. Abra a página no Chrome ou Safari, clique na extensão e solte o arquivo aqui.</p>
+</section>
+
+<section id="panel-url" hidden>
+  <label for="url">Importar via URL</label>
+  <div class="row">
+    <input type="text" id="url" placeholder="https://exemplo.com" autocomplete="off" spellcheck="false" />
+    <button id="go">Importar</button>
+  </div>
+
+  <fieldset>
+    <legend>Viewports</legend>
+    <div class="viewports" id="viewports"></div>
+  </fieldset>
+
+  <!-- Só vale aqui: na aba Arquivo a simplificação já aconteceu na captura,
+       e quem decide é o checkbox da própria extensão. -->
+  <label class="opt"><input type="checkbox" id="simplify" checked /><span>Simplificar camadas <small>— remove divs vazias</small></span></label>
+
+  <p class="hint">Requer o servidor local rodando (<code>npm start</code>). Vantagem: captura vários viewports de uma vez.</p>
+</section>
+
+<fieldset>
+  <legend>Ao montar no Figma</legend>
+  <label class="opt"><input type="checkbox" id="styles" /><span>Criar color e text styles</span></label>
+  <label class="opt"><input type="checkbox" id="vars" /><span>Criar variáveis <small>— a partir dos --tokens do site</small></span></label>
+</fieldset>
+
+<footer>
+  <div class="bar" id="bar"><i id="barFill"></i></div>
+  <div class="status"><span class="dot" id="dot"></span><span id="statusText">procurando servidor…</span></div>
+</footer>
+
+<script>
+  const SERVER = 'http://localhost:3579';
+  const VIEWPORT_PRESETS = [
+    { w: 1920, on: false },
+    { w: 1440, on: true },
+    { w: 1024, on: false },
+    { w: 768, on: false },
+    { w: 390, on: false },
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  const dot = $('dot');
+  const statusText = $('statusText');
+  const bar = $('bar');
+  const barFill = $('barFill');
+  const goBtn = $('go');
+
+  let serverOnline = false;
+  let busy = false;
+
+  // ------------------------------------------------------------- viewports
+
+  VIEWPORT_PRESETS.forEach((preset, i) => {
+    const el = document.createElement('label');
+    el.className = 'vp' + (preset.on ? ' on' : '');
+    el.innerHTML =
+      '<input type="checkbox" ' + (preset.on ? 'checked' : '') + ' data-i="' + i + '" />' +
+      '<input type="number" value="' + preset.w + '" min="320" max="3840" data-w="' + i + '" />px';
+    $('viewports').appendChild(el);
+
+    const check = el.querySelector('input[type="checkbox"]');
+    check.addEventListener('change', () => {
+      preset.on = check.checked;
+      el.classList.toggle('on', check.checked);
+    });
+    el.querySelector('input[type="number"]').addEventListener('input', (e) => {
+      preset.w = Number(e.target.value) || preset.w;
+    });
+  });
+
+  // ---------------------------------------------------------- estado/rede
+
+  function setStatus(text, kind) {
+    statusText.textContent = text;
+    dot.className = 'dot' + (kind ? ' ' + kind : '');
+  }
+
+  function setProgress(pct) {
+    bar.classList.toggle('on', pct != null);
+    if (pct != null) barFill.style.width = Math.round(pct * 100) + '%';
+  }
+
+  // ------------------------------------------------------------------ abas
+
+  let activeTab = 'file';
+
+  for (const tab of document.querySelectorAll('.tab')) {
+    tab.addEventListener('click', () => {
+      activeTab = tab.dataset.tab;
+      for (const other of document.querySelectorAll('.tab')) other.classList.toggle('on', other === tab);
+      $('panel-file').hidden = activeTab !== 'file';
+      $('panel-url').hidden = activeTab !== 'url';
+      if (activeTab === 'file') setStatus('pronto para receber um arquivo');
+      else ping();
+    });
+  }
+
+  // ------------------------------------------------------- arquivo (.w2f)
+
+  const drop = $('drop');
+
+  drop.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    drop.classList.add('over');
+  });
+  drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+  drop.addEventListener('drop', (e) => {
+    e.preventDefault();
+    drop.classList.remove('over');
+    const file = e.dataTransfer.files[0];
+    if (file) readCapture(file);
+  });
+
+  $('browse').addEventListener('click', () => $('file').click());
+  $('file').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) readCapture(file);
+  });
+
+  function readCapture(file) {
+    setStatus('lendo ' + file.name + '…');
+    setProgress(0.1);
+
+    const reader = new FileReader();
+
+    reader.onerror = () => {
+      setProgress(null);
+      setStatus('não consegui ler o arquivo', 'err');
+    };
+
+    reader.onload = () => {
+      let payload;
+      try {
+        payload = JSON.parse(reader.result);
+      } catch (err) {
+        setProgress(null);
+        setStatus('arquivo inválido — não é um .w2f', 'err');
+        return;
+      }
+
+      if (!payload || !Array.isArray(payload.docs) || !payload.docs.length) {
+        setProgress(null);
+        setStatus('arquivo sem conteúdo de captura', 'err');
+        return;
+      }
+
+      build(payload);
+    };
+
+    reader.readAsText(file);
+  }
+
+  // --------------------------------------------------- envio para o main
+
+  /** Converte as imagens e entrega a captura ao thread principal. */
+  function build(payload) {
+    busy = true;
+    goBtn.disabled = true;
+    setProgress(0.35);
+    setStatus('preparando imagens…');
+
+    // O sandbox do plugin não tem atob nem fetch — a conversão é aqui.
+    for (const doc of payload.docs) {
+      const decoded = {};
+      for (const [id, image] of Object.entries(doc.images || {})) {
+        if (image.data) decoded[id] = { bytes: decodeBase64(image.data), mime: image.mime };
+        else if (image.svg) decoded[id] = { svg: image.svg };
+        // entradas com erro são ignoradas — o nó fica sem a imagem
+      }
+      doc.images = decoded;
+    }
+
+    setProgress(0.5);
+    setStatus('montando no canvas…');
+
+    parent.postMessage(
+      {
+        pluginMessage: {
+          type: 'build',
+          docs: payload.docs,
+          options: {
+            createStyles: $('styles').checked,
+            createVariables: $('vars').checked,
+          },
+        },
+      },
+      '*'
+    );
+  }
+
+  async function ping() {
+    if (busy || activeTab !== 'url') return;
+    try {
+      const res = await fetch(SERVER + '/health', { cache: 'no-store' });
+      const json = await res.json();
+      serverOnline = !!json.ok;
+      setStatus(serverOnline ? 'servidor conectado' : 'servidor respondeu errado', serverOnline ? 'ok' : 'err');
+    } catch {
+      serverOnline = false;
+      setStatus('servidor offline — rode `npm start` na pasta server', 'err');
+    }
+    goBtn.disabled = !serverOnline || busy;
+  }
+
+  ping();
+  setInterval(ping, 4000);
+
+  // --------------------------------------------------------------- import
+
+  /** base64 -> Uint8Array (o sandbox do plugin nao tem atob). */
+  function decodeBase64(b64) {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+
+  goBtn.addEventListener('click', async () => {
+    const url = $('url').value.trim();
+    if (!url) {
+      setStatus('informe uma URL', 'err');
+      return;
+    }
+
+    const viewports = VIEWPORT_PRESETS.filter((v) => v.on).map((v) => v.w);
+    if (!viewports.length) {
+      setStatus('selecione ao menos um viewport', 'err');
+      return;
+    }
+
+    busy = true;
+    goBtn.disabled = true;
+    setProgress(0.05);
+    setStatus('renderizando a página…');
+
+    let payload;
+    try {
+      const res = await fetch(SERVER + '/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url,
+          viewports,
+          simplify: $('simplify').checked ? 'empty' : 'none',
+        }),
+      });
+      payload = await res.json();
+      if (payload.error) throw new Error(payload.error);
+    } catch (err) {
+      busy = false;
+      goBtn.disabled = false;
+      setProgress(null);
+      setStatus('falhou: ' + (err.message || err), 'err');
+      return;
+    }
+
+    build(payload);
+  });
+
+  // ------------------------------------------------------- mensagens do main
+
+  onmessage = (event) => {
+    const msg = event.data.pluginMessage;
+    if (!msg) return;
+
+    if (msg.type === 'progress') {
+      setProgress(0.5 + msg.value * 0.5);
+      if (msg.label) setStatus(msg.label);
+    }
+
+    if (msg.type === 'done') {
+      busy = false;
+      goBtn.disabled = false;
+      setProgress(null);
+      setStatus(msg.summary, 'ok');
+    }
+
+    if (msg.type === 'error') {
+      busy = false;
+      goBtn.disabled = false;
+      setProgress(null);
+      setStatus('erro: ' + msg.message, 'err');
+    }
+  };
+</script>

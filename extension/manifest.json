@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "web to figma",
+  "version": "1.0.0",
+  "description": "Captura a pagina aberta e gera um arquivo para importar no plugin web-to-figma do Figma.",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_title": "Capturar para o Figma",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "128": "icon.png"
+  }
+}
