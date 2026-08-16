@@ -102,10 +102,11 @@ Um header com `z-index` alto declarado antes do banner ficava atrás dele. Os fi
 
 ## Verificação
 
-Não dá para rodar o Figma em CI, então a validação é feita por três ferramentas em `tools/`:
+Não dá para rodar o Figma em CI, então a validação é feita por quatro ferramentas em `tools/`:
 
 - **`simulate.mjs`** — executa `plugin/code.js` de verdade contra um stub da Plugin API que reproduz as validações reais do Figma: fonte carregada antes de escrever texto, ranges dentro dos limites, formatos de imagem aceitos, dimensões finitas. Pega quase todo erro de lógica antes de abrir o Figma.
 - **`preview.mjs`** — redesenha a árvore aplicando as mesmas regras do plugin e gera um PNG. É o que revela erro de *fidelidade*, que o simulador não vê.
 - **`compare.mjs`** — põe o preview lado a lado com a página real.
+- **`test-ui.mjs`** — carrega `plugin/ui.html` com o `fetch` e o `parent.postMessage` dublados, fazendo o papel do servidor e do main thread. É onde se testa a fila da aba URL: ordem dos sites, um request de cada vez, erro em um site sem derrubar o resto.
 
 O preview roda num Chromium sem as fontes do site instaladas, então a tipografia sai com fallback. Compare posição, cor e estrutura — não a fonte.

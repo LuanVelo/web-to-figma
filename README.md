@@ -63,7 +63,7 @@ Depois feche e reabra o Safari para ele pegar a versão nova.
 
 A captura usa a largura atual da janela. Para capturar mobile, estreite a janela antes.
 
-**Com o servidor** — quando quiser vários viewports de uma vez:
+**Com o servidor** — quando quiser vários viewports, ou vários sites, de uma vez:
 
 ```bash
 npm install
@@ -74,6 +74,10 @@ npm start
 ```
 
 No plugin, aba **URL**, cole o endereço e escolha os viewports. O servidor fecha o Chromium sozinho após 3 minutos parado e se encerra após 20 minutos sem uso — não fica pesando à toa.
+
+**Vários sites de uma vez** — clique em **+ site** para adicionar mais endereços (ou cole uma lista, uma URL por linha, que ela se distribui nos campos). Ao importar, eles entram numa fila e são capturados um de cada vez, cada um virando frames lado a lado no canvas. Os viewports marcados valem para todos.
+
+Durante a fila aparecem duas barras: a de cima é o total (`site 2 de 3`), a de baixo é o site atual. O ponto ao lado de cada campo mostra o estado — cinza na fila, azul importando, verde pronto, vermelho falhou (a mensagem fica no tooltip do ponto). Um site que falha não interrompe os outros; no fim o resumo diz quantos entraram e quantos falharam.
 
 ### Opções
 
@@ -144,6 +148,12 @@ node tools/preview.mjs captura.w2f saida.png
 node tools/compare.mjs saida.png real.png comparacao.png 0 1000
 ```
 
+**Testar a UI do plugin** — carrega `plugin/ui.html` com servidor e main thread falsos, e exercita a fila da aba URL (ordem, um site de cada vez, erro no meio, estado dos campos). Não precisa de servidor nem do Figma:
+
+```bash
+npm run test-ui
+```
+
 > O preview roda num Chromium sem as fontes do site instaladas, então o texto sai com fonte de fallback. Compare posições, cores e estrutura — não a tipografia.
 
 ## Estrutura
@@ -163,7 +173,7 @@ server/
 plugin/
   manifest.json
   code.js           monta os nós no canvas
-  ui.html           abas Arquivo e URL
+  ui.html           abas Arquivo e URL (a fila de sites mora aqui)
 safari/
   web to figma/     projeto Xcode gerado (empacota a extensão para o Safari)
 tools/
@@ -171,6 +181,7 @@ tools/
   simulate.mjs        roda o plugin contra um stub da Plugin API
   preview.mjs         redesenha a árvore em PNG
   compare.mjs         preview x original
+  test-ui.mjs         exercita a fila da aba URL sem Figma nem servidor
   sync-extension.mjs  espelha o extractor para a extensão
   build-safari.mjs    recompila e reinstala o app do Safari
 ```

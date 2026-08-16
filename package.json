@@ -9,6 +9,7 @@
     "postinstall": "playwright install chromium",
     "preview": "node tools/preview.mjs",
     "simulate": "node tools/simulate.mjs",
+    "test-ui": "node tools/test-ui.mjs",
     "sync": "node tools/sync-extension.mjs",
     "prestart": "node tools/sync-extension.mjs",
     "safari": "node tools/build-safari.mjs"

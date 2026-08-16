@@ -114,10 +114,21 @@
   .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex: none; }
   .dot.ok { background: var(--ok); }
   .dot.err { background: var(--err); }
+  .dot.run { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
 
   .bar { height: 3px; border-radius: 2px; background: var(--field); overflow: hidden; margin-bottom: 10px; display: none; }
   .bar.on { display: block; }
   .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+
+  /* Empilhadas, as duas barras se confundiriam: a do total e a cheia, a do
+     site atual vem logo abaixo, mais fina e esmaecida. */
+  #barTotal { margin-bottom: 3px; }
+  #barTotal.on + #bar { height: 2px; }
+  #barTotal.on + #bar > i { background: color-mix(in srgb, var(--accent) 45%, transparent); }
+
+  .queue { display: flex; align-items: center; gap: 6px; color: var(--muted); margin-bottom: 6px; }
+  .queue.off { display: none; }
 
   .hint { color: var(--muted); margin-top: 10px; line-height: 1.5; }
   code { background: var(--field); padding: 1px 4px; border-radius: 3px; }
@@ -152,6 +163,29 @@
     color: var(--accent);
     border: 1px solid var(--border);
   }
+
+  /* --- lista de sites (aba URL) --- */
+
+  .site { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+  .site .dot { margin-left: 1px; }
+
+  button.rm {
+    padding: 0;
+    width: 22px;
+    height: 22px;
+    flex: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1;
+  }
+  button.rm:hover:not(:disabled) { color: var(--err); }
+  /* Com um site só não há o que remover, mas o botão segue ocupando espaço
+     para o campo não mudar de largura ao adicionar o segundo. */
+  #sites.single button.rm { visibility: hidden; }
+
+  .actions { margin-top: 10px; }
+  .actions #go { margin-left: auto; }
 </style>
 
 <div class="tabs">
@@ -170,9 +204,10 @@
 </section>
 
 <section id="panel-url" hidden>
-  <label for="url">Importar via URL</label>
-  <div class="row">
-    <input type="text" id="url" placeholder="https://exemplo.com" autocomplete="off" spellcheck="false" />
+  <label>Importar via URL</label>
+  <div id="sites" class="single"></div>
+  <div class="row actions">
+    <button class="ghost" id="addSite">+ site</button>
     <button id="go">Importar</button>
   </div>
 
@@ -185,7 +220,7 @@
        e quem decide é o checkbox da própria extensão. -->
   <label class="opt"><input type="checkbox" id="simplify" checked /><span>Simplificar camadas <small>— remove divs vazias</small></span></label>
 
-  <p class="hint">Requer o servidor local rodando (<code>npm start</code>). Vantagem: captura vários viewports de uma vez.</p>
+  <p class="hint">Requer o servidor local rodando (<code>npm start</code>). Os viewports valem para todos os sites da fila, importados um de cada vez.</p>
 </section>
 
 <fieldset>
@@ -195,6 +230,8 @@
 </fieldset>
 
 <footer>
+  <div class="queue off" id="queueLabel"></div>
+  <div class="bar" id="barTotal"><i id="barTotalFill"></i></div>
   <div class="bar" id="bar"><i id="barFill"></i></div>
   <div class="status"><span class="dot" id="dot"></span><span id="statusText">procurando servidor…</span></div>
 </footer>
@@ -215,9 +252,98 @@
   const bar = $('bar');
   const barFill = $('barFill');
   const goBtn = $('go');
+  const sitesEl = $('sites');
+  const addBtn = $('addSite');
 
   let serverOnline = false;
   let busy = false;
+
+  // ------------------------------------------------------- lista de sites
+
+  /**
+   * A aba URL aceita uma fila: cada linha e um site, importado na ordem.
+   * As linhas sao criadas por JS para que adicionar, remover e marcar estado
+   * seja um so caminho.
+   */
+  function addSite(value) {
+    const row = document.createElement('div');
+    row.className = 'site';
+    row.innerHTML =
+      '<span class="dot"></span>' +
+      '<input type="text" placeholder="https://exemplo.com" autocomplete="off" spellcheck="false" />' +
+      '<button class="rm" title="remover">&times;</button>';
+
+    const input = row.querySelector('input');
+    if (value) input.value = value;
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') goBtn.click();
+    });
+
+    // Colar uma lista pronta (uma URL por linha) vira varias linhas de uma vez.
+    input.addEventListener('paste', (e) => {
+      const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+      const lines = text.split(/[\r\n]+/).map((line) => line.trim()).filter(Boolean);
+      if (lines.length < 2) return;
+      e.preventDefault();
+      input.value = lines[0];
+      let after = row;
+      for (const line of lines.slice(1)) after = addSiteAfter(after, line);
+    });
+
+    row.querySelector('.rm').addEventListener('click', () => removeSite(row));
+
+    sitesEl.appendChild(row);
+    syncSites();
+    return row;
+  }
+
+  function addSiteAfter(row, value) {
+    const added = addSite(value);
+    row.after(added);
+    return added;
+  }
+
+  function removeSite(row) {
+    // Nunca ficamos sem campo: com um so, remover apenas limpa.
+    if (sitesEl.children.length === 1) {
+      row.querySelector('input').value = '';
+      setSiteState(row, null);
+      return;
+    }
+    row.remove();
+    syncSites();
+  }
+
+  /** Esconde o botao remover quando so ha uma linha. */
+  function syncSites() {
+    sitesEl.classList.toggle('single', sitesEl.children.length === 1);
+  }
+
+  function setSiteState(row, state, detail) {
+    const stateDot = row.querySelector('.dot');
+    stateDot.className = 'dot' + (state ? ' ' + state : '');
+    stateDot.title = detail || '';
+  }
+
+  function siteRows() {
+    return Array.from(sitesEl.children);
+  }
+
+  function setSitesDisabled(disabled) {
+    for (const row of siteRows()) {
+      row.querySelector('input').disabled = disabled;
+      row.querySelector('.rm').disabled = disabled;
+    }
+    addBtn.disabled = disabled;
+  }
+
+  addBtn.addEventListener('click', () => {
+    const row = addSite('');
+    row.querySelector('input').focus();
+  });
+
+  addSite('');
 
   // ------------------------------------------------------------- viewports
 
@@ -241,14 +367,56 @@
 
   // ---------------------------------------------------------- estado/rede
 
-  function setStatus(text, kind) {
+  // Quem escreveu por ultimo na linha de status: o ping do servidor ou uma
+  // importacao. O ping roda a cada 4s e apagaria o resumo da fila.
+  let statusOwner = 'server';
+
+  function setStatus(text, kind, owner) {
     statusText.textContent = text;
     dot.className = 'dot' + (kind ? ' ' + kind : '');
+    statusOwner = owner || 'import';
   }
+
+  // Progresso em dois niveis: a fila inteira e o site que esta sendo importado.
+  // `queue` fica null fora de uma fila — ai so a barra de baixo aparece.
+  let queue = null;
 
   function setProgress(pct) {
     bar.classList.toggle('on', pct != null);
     if (pct != null) barFill.style.width = Math.round(pct * 100) + '%';
+    setTotalProgress(pct);
+  }
+
+  /** A barra do total anda junto com a do site: (concluidos + fracao) / n. */
+  function setTotalProgress(pct) {
+    if (!queue || queue.total < 2) return;
+    const share = (queue.index + (pct != null ? pct : 1)) / queue.total;
+    $('barTotalFill').style.width = Math.round(Math.min(1, share) * 100) + '%';
+  }
+
+  // O contador e a barra do total so fazem sentido com mais de um site.
+  function startQueue(total) {
+    queue = { index: 0, total, ok: 0, failed: 0 };
+    const many = total > 1;
+    $('queueLabel').classList.toggle('off', !many);
+    $('barTotal').classList.toggle('on', many);
+    $('barTotalFill').style.width = '0%';
+  }
+
+  function setQueueLabel(url) {
+    if (!queue || queue.total < 2) return;
+    $('queueLabel').textContent = 'site ' + (queue.index + 1) + ' de ' + queue.total + ' — ' + hostnameOf(url);
+  }
+
+  function endQueue() {
+    queue = null;
+    $('queueLabel').classList.add('off');
+    $('barTotal').classList.remove('on');
+  }
+
+  function hostnameOf(url) {
+    const match = /^(?:https?:\/\/)?([^/?#]+)/i.exec((url || '').trim());
+    return match ? match[1].replace(/^www\./, '') : url;
   }
 
   // ------------------------------------------------------------------ abas
@@ -262,7 +430,7 @@
       $('panel-file').hidden = activeTab !== 'file';
       $('panel-url').hidden = activeTab !== 'url';
       if (activeTab === 'file') setStatus('pronto para receber um arquivo');
-      else ping();
+      else ping(true);
     });
   }
 
@@ -315,18 +483,46 @@
         return;
       }
 
-      build(payload);
+      buildFile(payload);
     };
 
     reader.readAsText(file);
   }
 
+  /** Caminho da aba Arquivo: uma captura só, sem fila. */
+  async function buildFile(payload) {
+    setBusy(true);
+    try {
+      setStatus(await buildAndWait(payload), 'ok');
+    } catch (err) {
+      setStatus('erro: ' + (err.message || err), 'err');
+    } finally {
+      setProgress(null);
+      setBusy(false);
+    }
+  }
+
   // --------------------------------------------------- envio para o main
 
-  /** Converte as imagens e entrega a captura ao thread principal. */
-  function build(payload) {
-    busy = true;
-    goBtn.disabled = true;
+  // O main responde de forma assincrona; guardamos aqui quem esta esperando
+  // para conseguir encadear um site apos o outro.
+  let pending = null;
+
+  function setBusy(on) {
+    busy = on;
+    setSitesDisabled(on);
+    refreshGo();
+  }
+
+  function refreshGo() {
+    goBtn.disabled = busy || !serverOnline;
+  }
+
+  /**
+   * Converte as imagens, entrega a captura ao thread principal e resolve
+   * quando o main termina de montar (ou rejeita se ele falhar).
+   */
+  function buildAndWait(payload) {
     setProgress(0.35);
     setStatus('preparando imagens…');
 
@@ -344,36 +540,54 @@
     setProgress(0.5);
     setStatus('montando no canvas…');
 
-    parent.postMessage(
-      {
-        pluginMessage: {
-          type: 'build',
-          docs: payload.docs,
-          options: {
-            createStyles: $('styles').checked,
-            createVariables: $('vars').checked,
+    return new Promise((resolve, reject) => {
+      pending = { resolve, reject };
+      parent.postMessage(
+        {
+          pluginMessage: {
+            type: 'build',
+            docs: payload.docs,
+            options: {
+              createStyles: $('styles').checked,
+              createVariables: $('vars').checked,
+            },
           },
         },
-      },
-      '*'
-    );
+        '*'
+      );
+    });
   }
 
-  async function ping() {
+  /**
+   * Checa o servidor. `force` e para quando o usuario acabou de abrir a aba e
+   * quer ver o estado da conexao; fora isso a checagem periodica so escreve na
+   * linha de status se ela ainda for dela ou se o servidor mudou de estado —
+   * do contrario apagaria o resumo da ultima importacao poucos segundos depois.
+   */
+  async function ping(force) {
     if (busy || activeTab !== 'url') return;
+
+    const was = serverOnline;
+    let text;
+    let kind;
+
     try {
       const res = await fetch(SERVER + '/health', { cache: 'no-store' });
       const json = await res.json();
       serverOnline = !!json.ok;
-      setStatus(serverOnline ? 'servidor conectado' : 'servidor respondeu errado', serverOnline ? 'ok' : 'err');
+      text = serverOnline ? 'servidor conectado' : 'servidor respondeu errado';
+      kind = serverOnline ? 'ok' : 'err';
     } catch {
       serverOnline = false;
-      setStatus('servidor offline — rode `npm start` na pasta server', 'err');
+      text = 'servidor offline — rode `npm start` na pasta server';
+      kind = 'err';
     }
-    goBtn.disabled = !serverOnline || busy;
+
+    if (force || statusOwner === 'server' || was !== serverOnline) setStatus(text, kind, 'server');
+    refreshGo();
   }
 
-  ping();
+  ping(true);
   setInterval(ping, 4000);
 
   // --------------------------------------------------------------- import
@@ -386,10 +600,84 @@
     return bytes;
   }
 
+  /** Captura uma URL no servidor. */
+  async function fetchCapture(url, viewports) {
+    const res = await fetch(SERVER + '/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        viewports,
+        simplify: $('simplify').checked ? 'empty' : 'none',
+      }),
+    });
+    const payload = await res.json();
+    if (payload.error) throw new Error(payload.error);
+    if (!payload.docs || !payload.docs.length) throw new Error('captura vazia');
+    return payload;
+  }
+
+  /**
+   * Importa a fila em serie. Um site de cada vez de proposito: o servidor
+   * renderiza no Chromium e o main monta no canvas — paralelizar so brigaria
+   * por memoria. Falha em um site nao interrompe os outros.
+   */
+  async function runQueue(targets, viewports) {
+    setBusy(true);
+    startQueue(targets.length);
+
+    for (const target of targets) {
+      setSiteState(target.row, 'run');
+      setQueueLabel(target.url);
+      setProgress(0.05);
+      setStatus('renderizando ' + hostnameOf(target.url) + '…');
+
+      try {
+        const payload = await fetchCapture(target.url, viewports);
+        const summary = await buildAndWait(payload);
+        setSiteState(target.row, 'ok');
+        setStatus(summary, 'ok');
+        queue.ok++;
+      } catch (err) {
+        const message = String((err && err.message) || err);
+        setSiteState(target.row, 'err', message);
+        setStatus('falhou: ' + message, 'err');
+        queue.failed++;
+      }
+
+      queue.index++;
+      setTotalProgress(0); // fecha a fatia deste site na barra do total
+    }
+
+    const { ok, failed, total } = queue;
+    endQueue();
+    setProgress(null);
+    setBusy(false);
+
+    if (total === 1) return; // a linha de status já mostra o resumo deste site
+    if (!failed) return setStatus(ok + ' de ' + total + ' sites importados', 'ok');
+    setStatus(
+      (ok === 1 ? '1 importado' : ok + ' importados') + ' · ' + (failed === 1 ? '1 falhou' : failed + ' falharam'),
+      'err'
+    );
+  }
+
   goBtn.addEventListener('click', async () => {
-    const url = $('url').value.trim();
-    if (!url) {
-      setStatus('informe uma URL', 'err');
+    const seen = new Set();
+    const targets = [];
+
+    for (const row of siteRows()) {
+      const url = row.querySelector('input').value.trim();
+      setSiteState(row, null);
+      if (!url) continue;
+      const key = url.toLowerCase();
+      if (seen.has(key)) continue; // repetido na lista: importa uma vez só
+      seen.add(key);
+      targets.push({ url, row });
+    }
+
+    if (!targets.length) {
+      setStatus('informe ao menos uma URL', 'err');
       return;
     }
 
@@ -399,33 +687,7 @@
       return;
     }
 
-    busy = true;
-    goBtn.disabled = true;
-    setProgress(0.05);
-    setStatus('renderizando a página…');
-
-    let payload;
-    try {
-      const res = await fetch(SERVER + '/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url,
-          viewports,
-          simplify: $('simplify').checked ? 'empty' : 'none',
-        }),
-      });
-      payload = await res.json();
-      if (payload.error) throw new Error(payload.error);
-    } catch (err) {
-      busy = false;
-      goBtn.disabled = false;
-      setProgress(null);
-      setStatus('falhou: ' + (err.message || err), 'err');
-      return;
-    }
-
-    build(payload);
+    await runQueue(targets, viewports);
   });
 
   // ------------------------------------------------------- mensagens do main
@@ -439,18 +701,18 @@
       if (msg.label) setStatus(msg.label);
     }
 
+    // done/error encerram a espera de quem chamou buildAndWait — é ele quem
+    // decide se limpa a barra (site único) ou segue para o próximo da fila.
     if (msg.type === 'done') {
-      busy = false;
-      goBtn.disabled = false;
-      setProgress(null);
-      setStatus(msg.summary, 'ok');
+      const resolve = pending && pending.resolve;
+      pending = null;
+      if (resolve) resolve(msg.summary);
     }
 
     if (msg.type === 'error') {
-      busy = false;
-      goBtn.disabled = false;
-      setProgress(null);
-      setStatus('erro: ' + msg.message, 'err');
+      const reject = pending && pending.reject;
+      pending = null;
+      if (reject) reject(new Error(msg.message));
     }
   };
 </script>
