@@ -35,27 +35,31 @@ Passa a aparecer em **Plugins → Development → web to figma**. É um plugin d
 2. Ligue o **Modo do desenvolvedor** (canto superior direito)
 3. **Carregar sem compactação** → selecione a pasta `extension/`
 
-**3. Extensão no Safari**
+**3. Extensão no Safari** (opcional, macOS — pule se você usa Chrome)
 
-O Safari não carrega uma pasta solta: a extensão precisa vir dentro de um app. O projeto Xcode já está gerado em `safari/` e o app já foi compilado e instalado em `/Applications/web to figma.app`.
-
-Falta só habilitar:
-
-1. Abra **/Applications/web to figma.app** uma vez (é isso que registra a extensão no Safari)
-2. **Safari → Ajustes → Extensões** e marque **web to figma**
-3. Na primeira captura o Safari pede acesso ao site — escolha **Permitir em Todos os Sites**, senão a extensão não enxerga a página
-
-O app é assinado com a identidade **Apple Development** encontrada no seu keychain, então aparece na lista permanentemente — sem depender de "Permitir Extensões Não Assinadas", que se desliga a cada reinício do Safari.
-
-Se nenhuma identidade for encontrada no keychain, o script cai para assinatura ad-hoc e avisa. Nesse caso a opção acima precisa estar ligada.
-
-Sempre que mexer em `extension/` ou em `server/extractor.js`, recompile:
+O Safari não carrega uma pasta solta: a extensão precisa vir dentro de um app. O projeto Xcode já vem pronto no repositório, e um comando compila, assina e instala em `/Applications`:
 
 ```bash
 npm run safari
 ```
 
-Depois feche e reabra o Safari para ele pegar a versão nova.
+Precisa do **Xcode completo** — as Command Line Tools sozinhas não bastam. Se o seu Xcode não estiver em `/Applications/Xcode.app`, aponte o caminho:
+
+```bash
+DEVELOPER_DIR=/caminho/para/Xcode.app/Contents/Developer npm run safari
+```
+
+Esse mesmo comando serve para os dois casos: **instalar pela primeira vez** e **atualizar** uma instalação que já existe — ele sempre reconstrói e substitui o app. Rode de novo sempre que mexer em `extension/` ou em `server/extractor.js`, que é o que a extensão empacota.
+
+**Primeira instalação** — depois do comando, falta habilitar:
+
+1. Abra **/Applications/web to figma.app** uma vez. É isso que registra a extensão no Safari; o app em si não faz nada além disso
+2. **Safari → Ajustes → Extensões** e marque **web to figma**
+3. Na primeira captura o Safari pede acesso ao site — escolha **Permitir em Todos os Sites**, senão a extensão não enxerga a página
+
+**Já tinha instalado** — os três passos acima continuam valendo, não precisa refazer. Feche e reabra o Safari para ele carregar a versão nova.
+
+Sobre a assinatura: o script procura uma identidade **Apple Development** no seu keychain e assina com ela, o que mantém a extensão na lista do Safari de forma permanente. Se não achar nenhuma, ele avisa e cai para assinatura ad-hoc — aí a extensão só aparece com **Desenvolvedor → Permitir Extensões Não Assinadas** ligado, e essa opção se desliga a cada reinício do Safari.
 
 ## Uso
 
