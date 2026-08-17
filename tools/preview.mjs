@@ -106,6 +106,14 @@ const escapeHtml = (text) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /**
+ * O nome da familia vai dentro de um atributo style="…". Com aspas duplas ele
+ * FECHA o atributo, e todo o resto da declaracao (cor, tamanho, line-height,
+ * text-transform) e descartado silenciosamente — o preview ficava mostrando
+ * texto preto de tamanho padrao e ninguem percebia.
+ */
+const cssFamily = (family) => `'${String(family || 'Inter').replace(/['\\]/g, '')}', sans-serif`;
+
+/**
  * Reproduz os ranges de estilo do texto — o equivalente ao setRangeFontName
  * que o plugin aplica no Figma.
  */
@@ -122,7 +130,7 @@ function renderChars(t) {
     const css =
       `font-weight:${s.weight};font-size:${s.size}px;` +
       (s.italic ? 'font-style:italic;' : '') +
-      `font-family:"${s.family}", sans-serif;` +
+      `font-family:${cssFamily(s.family)};` +
       `color:${rgba(s.color.color, s.color.opacity)};` +
       (s.decoration === 'STRIKETHROUGH' ? 'text-decoration:line-through;' : s.decoration === 'UNDERLINE' ? 'text-decoration:underline;' : '');
     html += `<span style="${css}">${escapeHtml(t.chars.slice(range.start, range.end))}</span>`;
@@ -152,7 +160,7 @@ function render(spec, origin) {
       base +
       `width:${spec.w}px;` +
       (t.wrap ? '' : 'white-space:nowrap;') +
-      `font-family:"${t.family}", sans-serif;font-size:${t.size}px;font-weight:${t.weight};` +
+      `font-family:${cssFamily(t.family)};font-size:${t.size}px;font-weight:${t.weight};` +
       (t.italic ? 'font-style:italic;' : '') +
       (t.lineHeight ? `line-height:${t.lineHeight}px;` : 'line-height:normal;') +
       `letter-spacing:${t.letterSpacing}px;` +

@@ -14,7 +14,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { getBrowser, closeBrowser } from './lib/browser.js';
-import { downloadImages } from './lib/assets.js';
+import { downloadImages, captureShots } from './lib/assets.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3579;
@@ -30,11 +30,21 @@ const SHUTDOWN_IDLE_MS = 20 * 60 * 1000;
 
 let lastActivity = Date.now();
 
+// Capturas em andamento. Sem esse contador o varredor de ociosidade fecharia o
+// Chromium no meio de uma captura longa — o erro que aparece do outro lado e
+// "Target page, context or browser has been closed", sem pista da causa.
+let inFlight = 0;
+
 function touch() {
   lastActivity = Date.now();
 }
 
 setInterval(async () => {
+  if (inFlight > 0) {
+    touch(); // trabalho em curso conta como atividade
+    return;
+  }
+
   const idle = Date.now() - lastActivity;
 
   if (idle > SHUTDOWN_IDLE_MS) {
@@ -125,19 +135,30 @@ async function capture({ url, viewport, simplify, waitMs, colorScheme }) {
 
     const result = await page.evaluate((opts) => window.__W2F.extract(opts), {
       simplify,
+      // So o servidor consegue fotografar a tela: video, canvas e iframe
+      // dependem disso para nao virarem frame vazio.
+      allowShots: true,
       extraVarNames: Array.from(cssVarNames).slice(0, 2000),
     });
 
-    const images = await downloadImages(context, result.images);
+    const truncated = fullHeight > MAX_PAGE_HEIGHT;
+    const [downloaded, shots] = await Promise.all([
+      downloadImages(context, result.images),
+      captureShots(page, result.images, {
+        truncated,
+        docWidth: result.meta.width,
+        docHeight: result.meta.height,
+      }),
+    ]);
 
     return {
       viewport,
       colorScheme: colorScheme || 'light',
       tree: result.tree,
-      images,
+      images: { ...downloaded, ...shots },
       fonts: result.fonts,
       cssVars: result.cssVars,
-      meta: { ...result.meta, truncated: fullHeight > MAX_PAGE_HEIGHT, frozenFixed: frozen },
+      meta: { ...result.meta, truncated, frozenFixed: frozen },
     };
   } finally {
     await context.close().catch(() => {});
@@ -215,6 +236,8 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
+  touch();
+
   const { pathname } = new URL(req.url, `http://localhost:${PORT}`);
 
   if (req.method === 'GET' && pathname === '/health') {
@@ -244,6 +267,7 @@ const server = http.createServer(async (req, res) => {
     const simplify = body.simplify === 'none' ? 'none' : 'empty';
     const started = Date.now();
 
+    inFlight++;
     try {
       const docs = [];
       // Sequencial de proposito: paralelizar viewports multiplica o uso de
@@ -262,10 +286,14 @@ const server = http.createServer(async (req, res) => {
     } catch (err) {
       console.error('✗ falha na captura:', err.message);
       return send(res, 500, { error: String(err.message || err) });
+    } finally {
+      inFlight--;
+      touch();
     }
   }
 
   if (req.method === 'POST' && pathname === '/shot') {
+    inFlight++;
     try {
       const body = await readBody(req);
       const result = await screenshot({
@@ -275,6 +303,9 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, result);
     } catch (err) {
       return send(res, 500, { error: String(err.message || err) });
+    } finally {
+      inFlight--;
+      touch();
     }
   }
 

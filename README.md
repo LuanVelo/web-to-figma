@@ -99,6 +99,7 @@ Já estas valem para os dois modos, e ficam no plugin (acontecem ao montar):
 - Bordas (inclusive diferentes por lado), cantos arredondados, sombras internas e externas
 - Imagens (PNG, JPEG, GIF, WebP) e SVG como vetor editável
 - Ordem de pintura respeitando `z-index`, e elementos rotacionados
+- **Vídeo, canvas e iframe** — pela captura do servidor, viram uma imagem do que estava na tela (banner em vídeo, gráfico WebGL, mapa embutido)
 
 E, igualmente importante, o que ele **não** traz: mega-menus e acordeões fechados, slides de carrossel fora de quadro e menus off-canvas ficam de fora, em vez de aparecerem empilhados sobre o conteúdo real.
 
@@ -108,8 +109,9 @@ O plugin procura a fonte original no seu Figma. Se não estiver instalada, cai p
 
 ## Limitações conhecidas
 
-- **Pseudo-elementos `::before` / `::after` não são capturados** — não têm bounding rect acessível. Afeta ícones decorativos, setas de carrossel e alguns badges.
-- **Gráficos em canvas WebGL não são capturáveis** — o browser recusa a leitura do buffer. Sites com ilustrações animadas em WebGL (o hero do stripe.com) vêm com esses blocos vazios; o resto da página vem normal.
+- **Pseudo-elementos `::before` / `::after` não são capturados** — não têm bounding rect acessível. Afeta ícones decorativos, bolinhas de carrossel, setas e alguns badges.
+- **Vídeo, canvas e iframe só vêm pelo servidor.** É ele que fotografa a região da tela; na extensão o extractor roda dentro da página, sem acesso a captura, então esses blocos continuam vazios (exceto vídeo com `poster` ou servido com CORS). O teto é de 12 fotos por página.
+- Uma foto de região é uma imagem chapada: o texto que estiver dentro dela não vira camada editável.
 - Elementos `position: fixed` (headers flutuantes, botões de chat, overlays) são congelados na posição em que aparecem com a página no topo.
 - Filtros CSS (`blur`, `backdrop-filter`), blend modes e máscaras: suporte parcial ou nenhum.
 - Transforms 3D não são suportados.

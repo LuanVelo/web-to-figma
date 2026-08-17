@@ -9,6 +9,8 @@ const MAX_IMAGE_BYTES = 4 * 1024 * 1024; // 4MB por imagem
 const MAX_TOTAL_BYTES = 60 * 1024 * 1024; // teto do payload inteiro
 const CONCURRENCY = 8;
 
+const MAX_SHOTS = 12; // screenshot e caro: um teto evita pagina cheia de iframe
+
 /**
  * Detecta o formato pelos magic bytes em vez de confiar no content-type —
  * servidores mandam coisas como image/pjpeg, application/octet-stream ou
@@ -46,7 +48,8 @@ function parseDataUrl(src) {
  * @returns {Promise<Record<string, {mime: string, data: string} | {error: string}>>}
  */
 export async function downloadImages(context, images) {
-  const entries = Object.entries(images || {});
+  // Entradas kind:'shot' nao tem URL: quem resolve e captureShots().
+  const entries = Object.entries(images || {}).filter(([, info]) => info && info.kind !== 'shot');
   const out = {};
   let totalBytes = 0;
 
@@ -114,6 +117,67 @@ export async function downloadImages(context, images) {
     }
   });
   await Promise.all(workers);
+
+  return out;
+}
+
+/**
+ * Fotografa os pedacos de tela que o DOM nao entrega — video sem poster,
+ * canvas WebGL, iframe de outro dominio. O extractor marca a regiao com
+ * `addShot()`; aqui ela vira um PNG no MESMO formato do download, para o
+ * plugin nao precisar saber de onde a imagem veio.
+ *
+ * Precisa da pagina ainda aberta e com o viewport ja expandido: assim as
+ * coordenadas do documento e as do viewport coincidem. Quando a pagina foi
+ * truncada (mais alta que o teto do servidor) o recorte sai do modo fullPage,
+ * que e mais caro mas alcanca o que ficou abaixo da dobra.
+ *
+ * @param {import('playwright').Page} page
+ * @param {Record<string, {kind: string, rect: {x:number,y:number,w:number,h:number}}>} images
+ * @param {{truncated?: boolean, docWidth: number, docHeight: number}} bounds
+ */
+export async function captureShots(page, images, bounds) {
+  const entries = Object.entries(images || {}).filter(([, info]) => info && info.kind === 'shot');
+  const out = {};
+  if (!entries.length) return out;
+
+  const viewport = page.viewportSize() || { width: bounds.docWidth, height: bounds.docHeight };
+  const maxY = bounds.truncated ? bounds.docHeight : viewport.height;
+
+  for (const [id, info] of entries.slice(0, MAX_SHOTS)) {
+    const x = Math.max(0, Math.min(info.rect.x, bounds.docWidth));
+    const y = Math.max(0, Math.min(info.rect.y, maxY));
+    const width = Math.min(info.rect.w - (x - info.rect.x), bounds.docWidth - x);
+    const height = Math.min(info.rect.h - (y - info.rect.y), maxY - y);
+
+    if (width < 1 || height < 1) {
+      out[id] = { error: 'regiao fora da pagina' };
+      continue;
+    }
+
+    try {
+      // Esconde o que passa por cima da regiao (header, setas do carrossel,
+      // overlay de cookie). Sem isso esses elementos entram gravados na foto e
+      // ainda chegam como nos por cima dela — cada texto duas vezes no Figma.
+      await page.evaluate((shotId) => window.__W2F.beginShot(shotId), id);
+      try {
+        const buffer = await page.screenshot({
+          clip: { x, y, width, height },
+          fullPage: !!bounds.truncated,
+          timeout: 15000,
+        });
+        out[id] = { mime: 'image/png', data: buffer.toString('base64') };
+      } finally {
+        await page.evaluate(() => window.__W2F.endShot());
+      }
+    } catch (err) {
+      out[id] = { error: String(err.message || err).slice(0, 120) };
+    }
+  }
+
+  for (const [id] of entries.slice(MAX_SHOTS)) {
+    out[id] = { error: `limite de ${MAX_SHOTS} capturas de tela atingido` };
+  }
 
   return out;
 }

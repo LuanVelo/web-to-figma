@@ -57,6 +57,24 @@ Sticky ocupa espaço no fluxo. Convertê-lo tira o elemento do fluxo e **sobe a 
 **`fixed` precisa ser congelado antes do resize (só no servidor).**
 O servidor expande o viewport até a altura total da página. Um overlay `fixed` de `height:100%` viraria uma cortina de 6000px cobrindo tudo. Congelar converte para `absolute` na posição que o visitante veria.
 
+**Congelar pelo `getBoundingClientRect()` aplica o `transform` duas vezes.**
+O rect vem *depois* do transform. Gravado em `top`/`left`, o transform incide de novo e o elemento anda em dobro: um aviso de LGPD com `translate(-664px, -20px)` saía em `x=-608` em vez de `x=56`. Some a isso que `absolute` se resolve contra o ancestral posicionado, não contra o documento — um overlay dentro de um `header{position:relative}` descia a altura do header. `freezeFixed()` mede a caixa com o transform desligado, congela e então **confere onde o elemento caiu**, corrigindo pela diferença. A correção medida cobre os dois casos sem precisar caçar o bloco contêiner.
+
+**`<video>` sem `poster` não tem nada para extrair.**
+O DOM não entrega quadro nenhum, e o slide vira um frame vazio — foi assim que o hero inteiro de um e-commerce sumiu. A ordem hoje é `poster` → quadro atual desenhado num `<canvas>` (só funciona em vídeo same-origin ou com CORS) → foto da tela. A mesma foto salva `canvas` WebGL (que devolve quadro em branco sem `preserveDrawingBuffer`), `canvas` contaminado e `<iframe>`, cujo conteúdo mora em outro documento.
+
+**Screenshot recorta a tela, não o elemento.**
+A primeira versão da foto do vídeo trouxe header, logo e setas do carrossel gravados dentro do quadro — e esses mesmos elementos ainda chegavam como nós por cima, então cada texto aparecia duas vezes no Figma. Antes de fotografar, `beginShot()` esconde tudo que cruza a região sem ser ancestral nem descendente do alvo. `visibility: hidden`, não `display: none`: o elemento some sem sair do fluxo, então a geometria não muda e o recorte continua válido.
+
+**`inline-block` no meio da frase não é um bloco.**
+Um `<a>` `inline-block` dentro de um parágrafo fazia o texto desistir de ser um nó único. O que sobrava eram os text nodes soltos do parágrafo, e o trecho depois do link — que começa *no meio da linha* — era ancorado na esquerda do content box, caindo por cima do começo da frase: três textos empilhados no aviso de cookies. Hoje um `inline-block` sem visual próprio, sem transform e de uma linha só entra como segmento normal.
+
+**Texto multilinha nem sempre começa na margem.**
+Quando o trecho vem depois de um link, de um ícone ou de um botão inline, a primeira linha começa recuada. Largura de requebra ancorada à esquerda joga essa linha por cima do que veio antes. Nesse caso — e só nele — vai uma caixa por linha, cada uma onde o browser desenhou; parágrafo que começa na margem continua saindo como um nó só, que é o que se quer editar depois.
+
+**A primeira família da pilha costuma não ser uma fonte.**
+`font-family: -apple-system, "Helvetica Neue", Arial` entregava `-apple-system` ao plugin, que não acha essa família em Figma nenhum e cai no fallback — jogando fora a fonte de verdade, que estava logo ao lado. `primaryFamily()` pula aliases de sistema e genéricos.
+
 **Ordem do DOM não é ordem de pintura.**
 Um header com `z-index` alto declarado antes do banner ficava atrás dele. Os filhos são ordenados por z-index efetivo, com `sort` estável para preservar a ordem do DOM nos empates.
 
@@ -67,6 +85,10 @@ Um header com `z-index` alto declarado antes do banner ficava atrás dele. Os fi
 `image/pjpeg`, `application/octet-stream`, `text/plain` para arquivos que o Figma aceita sem problema. A detecção é por magic bytes.
 
 **Canvas WebGL não é capturável.** `toDataURL` num contexto WebGL sem `preserveDrawingBuffer` volta vazio. É limitação do browser, não contornável — o hero animado do stripe.com cai nisso.
+
+## Armadilhas do servidor
+
+**Marcador de ociosidade que ninguém atualiza mata a captura em curso.** O servidor fecha o Chromium depois de 3 min parado e se encerra depois de 20 min. A função que atualizava o relógio existia mas nunca era chamada: o prazo contava desde o *boot*, então toda captura iniciada 3 min depois de subir o servidor morria no meio, com um `Target page, context or browser has been closed` que não diz nada. Hoje todo request atualiza o relógio, e um contador de capturas em andamento impede que o varredor feche o browser embaixo de quem está trabalhando.
 
 ## Armadilhas do Figma
 
@@ -110,3 +132,7 @@ Não dá para rodar o Figma em CI, então a validação é feita por quatro ferr
 - **`test-ui.mjs`** — carrega `plugin/ui.html` com o `fetch` e o `parent.postMessage` dublados, fazendo o papel do servidor e do main thread. É onde se testa a fila da aba URL: ordem dos sites, um request de cada vez, erro em um site sem derrubar o resto.
 
 O preview roda num Chromium sem as fontes do site instaladas, então a tipografia sai com fallback. Compare posição, cor e estrutura — não a fonte.
+
+**Cuidado com aspas no HTML gerado pelo preview.** `font-family:"Inter"` dentro de `style="…"` fecha o atributo na primeira aspa: cor, tamanho, `line-height` e `text-transform` de **todo** texto eram descartados, e o preview mostrava tudo em preto no corpo padrão. A ferramenta que valida fidelidade mentiu por um bom tempo antes de alguém desconfiar. Nome de família vai entre aspas simples.
+
+O fallback de screenshot é exclusivo do servidor: na extensão o extractor roda dentro da página, sem acesso a captura de tela, então vídeo, canvas WebGL e iframe continuam vindo vazios ali. Ao comparar as duas rotas, essa diferença é esperada.

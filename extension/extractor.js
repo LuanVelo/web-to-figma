@@ -28,19 +28,31 @@
   const round = (n) => Math.round(n * 100) / 100;
 
   /**
-   * Conta quantas LINHAS um conjunto de retangulos ocupa.
+   * Agrupa retangulos por LINHA visual, em ordem de leitura.
    *
    * getClientRects() devolve um retangulo por caixa inline, nao por linha:
    * "R$ <strong>179,10</strong>" gera dois retangulos lado a lado na mesma
-   * linha. Contar retangulos faria esse preco passar por texto multilinha e
-   * ganhar largura de requebra, quebrando o valor ao meio.
+   * linha. Tratar retangulo como linha faria esse preco passar por texto
+   * multilinha e ganhar largura de requebra, quebrando o valor ao meio.
    */
-  function countLines(rects) {
-    const tops = [];
+  function groupLines(rects) {
+    const lines = [];
     for (const rect of rects) {
-      if (!tops.some((top) => Math.abs(top - rect.top) < 3)) tops.push(rect.top);
+      const line = lines.find((l) => Math.abs(l.top - rect.top) < 3);
+      if (line) {
+        line.left = Math.min(line.left, rect.left);
+        line.right = Math.max(line.right, rect.right);
+        line.bottom = Math.max(line.bottom, rect.bottom);
+      } else {
+        lines.push({ top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right });
+      }
     }
-    return tops.length;
+    lines.sort((a, b) => a.top - b.top);
+    return lines;
+  }
+
+  function countLines(rects) {
+    return groupLines(rects).length;
   }
 
   /** Divide "a, b(c, d), e" em ["a", "b(c, d)", "e"] — respeita parenteses. */
@@ -459,11 +471,30 @@
 
   // ----------------------------------------------------------------- fontes
 
-  /** "Inter, -apple-system, sans-serif" -> "Inter" */
+  // Nomes que nao correspondem a nenhuma fonte instalavel: ou sao apelidos do
+  // sistema, ou sao a familia generica do fim da pilha.
+  const ABSTRACT_FAMILIES = new Set([
+    '-apple-system', 'blinkmacsystemfont', '-webkit-body', 'system-ui',
+    'ui-sans-serif', 'ui-serif', 'ui-monospace', 'ui-rounded',
+    'sans-serif', 'serif', 'monospace', 'cursive', 'fantasy', 'emoji', 'math', 'fangsong',
+    'inherit', 'initial', 'unset', 'revert',
+  ]);
+
+  /**
+   * "Inter, -apple-system, sans-serif" -> "Inter"
+   * "-apple-system, 'Helvetica Neue', Arial" -> "Helvetica Neue"
+   *
+   * Pegar cegamente o primeiro nome da pilha entregava "-apple-system" ao
+   * plugin, que nao acha essa familia em Figma nenhum e cai no fallback —
+   * jogando fora a fonte de verdade, que estava logo ao lado.
+   */
   function primaryFamily(fontFamily) {
     if (!fontFamily) return 'Inter';
-    const first = splitTopLevel(fontFamily)[0] || 'Inter';
-    return first.replace(/^["']|["']$/g, '').trim() || 'Inter';
+    for (const entry of splitTopLevel(fontFamily)) {
+      const name = entry.replace(/^["']|["']$/g, '').trim();
+      if (name && !ABSTRACT_FAMILIES.has(name.toLowerCase())) return name;
+    }
+    return 'Inter';
   }
 
   function textCase(transform) {
@@ -529,6 +560,14 @@
 
   // ------------------------------------------------------------------ nucleo
 
+  // Elementos a fotografar, na ordem em que foram registrados. Fica fora do
+  // JSON de saida de proposito: o servidor precisa da referencia viva ao
+  // elemento para mascarar o que estiver por cima na hora do screenshot.
+  let shotTargets = new Map();
+
+  // Elementos escondidos temporariamente durante um screenshot.
+  let maskedForShot = [];
+
   function createContext(opts) {
     const images = {};
     const imageIds = new Map();
@@ -560,6 +599,25 @@
         const id = `img${++counter}`;
         imageIds.set(absolute, id);
         images[id] = { src: absolute, kind };
+        return id;
+      },
+
+      /**
+       * Registra um pedaco da tela para ser fotografado depois.
+       *
+       * E o unico jeito de trazer o que o DOM nao entrega: video sem poster,
+       * canvas contaminado ou WebGL, iframe de outro dominio. Quem preenche e
+       * o servidor, que tem o browser na mao — a extensao nao pode tirar
+       * screenshot de dentro da pagina, entao la a opcao fica desligada.
+       */
+      addShot(el, rect) {
+        if (!rect || rect.w <= 0 || rect.h <= 0) return null;
+        const key = `shot:${rect.x},${rect.y},${rect.w},${rect.h}`;
+        if (imageIds.has(key)) return imageIds.get(key);
+        const id = `img${++counter}`;
+        imageIds.set(key, id);
+        images[id] = { kind: 'shot', rect: { x: rect.x, y: rect.y, w: rect.w, h: rect.h } };
+        shotTargets.set(id, el);
         return id;
       },
 
@@ -658,7 +716,16 @@
       if (childStyle.display === 'none' || childStyle.visibility === 'hidden') continue;
 
       if (!childStyle.display.startsWith('inline')) return false;
-      if (childStyle.display === 'inline-block') return false;
+
+      // `inline-block` costuma ser so um <a> ou <span> no meio da frase — e a
+      // frase precisa continuar sendo um no de texto so. Ele quebraria o bloco
+      // se tivesse vida propria: ocupar mais de uma linha (ai e um paragrafo
+      // dentro do paragrafo) ou carregar transform. Fundo e borda proprios ja
+      // sao barrados logo abaixo.
+      if (childStyle.display === 'inline-block') {
+        if (childStyle.transform !== 'none') return false;
+        if (countLines(Array.from(child.getClientRects())) > 1) return false;
+      }
 
       // Um filho inline com fundo/borda proprios (badge, chip) precisa virar no.
       if (
@@ -752,6 +819,45 @@
   }
 
   /**
+   * Acha o offset do primeiro caractere de cada linha de um text node.
+   *
+   * Usa o proprio browser como oraculo: como o texto flui de cima para baixo,
+   * o topo do retangulo do caractere `i` so cresce — da para achar a virada por
+   * busca binaria, em ~7 medicoes por linha, em vez de medir caractere a
+   * caractere.
+   */
+  function lineCuts(node, lines) {
+    const total = node.nodeValue.length;
+    const range = document.createRange();
+
+    const topAt = (i) => {
+      range.setStart(node, i);
+      range.setEnd(node, Math.min(i + 1, total));
+      const rects = range.getClientRects();
+      return rects.length ? rects[rects.length - 1].top : null;
+    };
+
+    const cuts = [0];
+    for (let k = 1; k < lines.length; k++) {
+      const threshold = lines[k].top - 3;
+      let lo = cuts[k - 1];
+      let hi = total;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        const top = topAt(mid);
+        // Sem retangulo (espaco engolido na quebra) conta como "ainda antes".
+        if (top == null || top < threshold) lo = mid + 1;
+        else hi = mid;
+      }
+      cuts.push(lo);
+    }
+    cuts.push(total);
+
+    range.detach?.();
+    return cuts;
+  }
+
+  /**
    * Coleta os text nodes DIRETOS de um elemento que tambem tem filhos de bloco
    * — o caso em que o texto nao pode virar um bloco unico.
    */
@@ -782,24 +888,15 @@
       range.detach?.();
       if (!rects.length) continue;
 
-      const left = Math.min(...rects.map((r) => r.left));
-      const right = Math.max(...rects.map((r) => r.right));
-      const top = Math.min(...rects.map((r) => r.top));
-      const bottom = Math.max(...rects.map((r) => r.bottom));
-      const wrap = countLines(rects) > 1;
+      const lines = groupLines(rects);
+      const wrap = lines.length > 1;
 
-      // Uma linha: caixa justa, o Figma pode crescer sem quebrar.
-      // Multilinha: largura do content box e altura fixa, para nao empurrar layout.
-      const box = wrap
-        ? { x: contentBox.x, y: round(top + window.scrollY), w: contentBox.w, h: round(bottom - top) }
-        : { x: round(left + window.scrollX), y: round(top + window.scrollY), w: round(right - left), h: round(bottom - top) };
-
-      out.push({
+      const textNode = (box, content, multiline) => ({
         t: 'TEXT',
-        name: chars.trim().slice(0, 24) || 'text',
+        name: content.trim().slice(0, 24) || 'text',
         ...box,
         text: {
-          chars: chars.replace(/\s+/g, ' '),
+          chars: content.replace(/\s+/g, ' '),
           family: style.family,
           weight: style.weight,
           italic: style.italic,
@@ -810,9 +907,45 @@
           color: style.color,
           decoration: style.decoration,
           case: style.case,
-          wrap,
+          wrap: multiline,
         },
       });
+
+      const tight = (line) => ({
+        x: round(line.left + window.scrollX),
+        y: round(line.top + window.scrollY),
+        w: round(line.right - line.left),
+        h: round(line.bottom - line.top),
+      });
+
+      // Trecho multilinha que comeca no MEIO da linha — o texto que sobrou
+      // depois de um link, de um icone, de um botao inline. Ancorar na esquerda
+      // do content box jogaria a primeira linha por cima do que veio antes, que
+      // e como o aviso de cookies saia com tres textos empilhados. Nesse caso
+      // vai uma caixa por linha, cada uma onde o browser desenhou.
+      if (wrap && Math.abs(lines[0].left + window.scrollX - contentBox.x) > 2) {
+        const cuts = lineCuts(child, lines);
+        lines.forEach((line, i) => {
+          const piece = chars.slice(cuts[i], cuts[i + 1]);
+          if (!piece.trim()) return;
+          out.push(textNode(tight(line), piece, false));
+        });
+        continue;
+      }
+
+      // Uma linha: caixa justa, o Figma pode crescer sem quebrar.
+      // Multilinha: largura do content box e altura fixa, para nao empurrar layout.
+      const last = lines[lines.length - 1];
+      const box = wrap
+        ? {
+            x: contentBox.x,
+            y: round(lines[0].top + window.scrollY),
+            w: contentBox.w,
+            h: round(last.bottom - lines[0].top),
+          }
+        : tight(lines[0]);
+
+      out.push(textNode(box, chars, wrap));
     }
 
     return out;
@@ -858,6 +991,26 @@
         wrap: false,
       },
     };
+  }
+
+  /**
+   * Desenha o quadro atual de um <video> num canvas e devolve o id da imagem.
+   *
+   * So funciona com video same-origin ou servido com CORS: qualquer outro
+   * contamina o canvas e o toDataURL lanca. Vale tentar mesmo assim, porque o
+   * quadro sai limpo — sem o texto e os botoes que a pagina desenha por cima.
+   */
+  function videoFrame(el, ctx) {
+    if (!el.videoWidth || !el.videoHeight || el.readyState < 2) return null;
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.min(el.videoWidth, 1920);
+      canvas.height = Math.round(canvas.width * (el.videoHeight / el.videoWidth));
+      canvas.getContext('2d').drawImage(el, 0, 0, canvas.width, canvas.height);
+      return ctx.addImage(canvas.toDataURL('image/png'));
+    } catch {
+      return null;
+    }
   }
 
   function objectFitToScaleMode(fit) {
@@ -965,21 +1118,37 @@
     }
 
     if (tag === 'CANVAS') {
+      // Duas falhas silenciosas moram aqui: um canvas contaminado por conteudo
+      // cross-origin faz toDataURL lancar, e um contexto WebGL sem
+      // preserveDrawingBuffer devolve um quadro em branco (que sai minusculo
+      // depois de comprimido). Nos dois casos a foto da tela e o unico caminho.
       let dataUrl = null;
       try {
         dataUrl = el.toDataURL('image/png');
       } catch {
-        return []; // canvas contaminado por conteudo cross-origin
+        dataUrl = null;
       }
-      const id = ctx.addImage(dataUrl);
+
+      const looksBlank = !dataUrl || (dataUrl.length < 2500 && rect.w * rect.h > 10000);
+      const id = (!looksBlank && ctx.addImage(dataUrl)) || (ctx.opts.allowShots ? ctx.addShot(el, rect) : null);
       return id ? [{ t: 'IMAGE', name: nodeName(el), ...rect, img: { id, scaleMode: 'FILL' } }] : [];
     }
 
     if (tag === 'VIDEO') {
-      const poster = el.getAttribute('poster');
-      const id = poster ? ctx.addImage(poster) : null;
-      if (id) return [{ t: 'IMAGE', name: nodeName(el), ...rect, img: { id, scaleMode: 'FILL' } }];
-      // sem poster: cai no tratamento de frame comum abaixo
+      const poster = el.getAttribute('poster') || el.getAttribute('data-poster');
+      const id =
+        (poster && ctx.addImage(poster)) ||
+        videoFrame(el, ctx) ||
+        (ctx.opts.allowShots ? ctx.addShot(el, rect) : null);
+      if (id) return [{ t: 'IMAGE', name: nodeName(el), ...rect, radius: buildRadius(cs, rect), img: { id, scaleMode: objectFitToScaleMode(cs.objectFit) } }];
+      // nada capturavel: cai no tratamento de frame comum abaixo
+    }
+
+    // Mapa, player embutido, widget de terceiro: o conteudo mora noutro
+    // documento e nao aparece na arvore. Sem a foto, sobra um frame vazio.
+    if (tag === 'IFRAME' && ctx.opts.allowShots && rect.w >= 24 && rect.h >= 24) {
+      const id = ctx.addShot(el, rect);
+      if (id) return [{ t: 'IMAGE', name: nodeName(el), ...rect, radius: buildRadius(cs, rect), img: { id, scaleMode: 'FILL' } }];
     }
 
     // ---- frame comum
@@ -1198,6 +1367,21 @@
      * abaixo dele e a captura saia com a geometria errada. Alem disso, com a
      * pagina no topo o sticky ja esta na sua posicao natural: nao ha o que
      * congelar.
+     *
+     * Duas armadilhas moram aqui, e as duas ja custaram um bug:
+     *
+     * 1. `getBoundingClientRect()` devolve a caixa DEPOIS do transform. Gravar
+     *    esse valor em `top`/`left` faz o transform ser aplicado de novo, e o
+     *    elemento anda duas vezes — um banner de LGPD com
+     *    `transform: translate(-664px, -20px)` saia em x=-608 em vez de x=56.
+     *    Por isso medimos a caixa com o transform desligado.
+     *
+     * 2. `absolute` se resolve contra o bloco conteiner (o ancestral
+     *    posicionado), nao contra o documento. Um overlay dentro de um
+     *    `header{position:relative}` descia a altura do header inteiro. Em vez
+     *    de procurar o offsetParent — que ainda erraria com ancestrais que
+     *    criam bloco conteiner por `transform`/`filter`/`contain` — congelamos,
+     *    lemos o resultado e corrigimos pela diferenca medida.
      */
     freezeFixed() {
       const targets = [];
@@ -1207,21 +1391,98 @@
         if (cs.position !== 'fixed') continue;
         const rect = el.getBoundingClientRect();
         if (rect.width <= 0 || rect.height <= 0) continue;
-        targets.push({ el, rect, position: cs.position });
+        targets.push({ el, visual: rect, transform: cs.transform });
       }
 
-      for (const { el, rect } of targets) {
+      for (const { el, visual, transform } of targets) {
+        // (1) caixa de layout: a mesma medida, sem o transform proprio.
+        let layout = visual;
+        if (transform && transform !== 'none') {
+          const previous = el.style.getPropertyValue('transform');
+          const priority = el.style.getPropertyPriority('transform');
+          el.style.setProperty('transform', 'none', 'important');
+          layout = el.getBoundingClientRect();
+          if (previous) el.style.setProperty('transform', previous, priority);
+          else el.style.removeProperty('transform');
+        }
+
+        // border-box: o rect medido inclui borda e padding. Sem isto, um
+        // elemento content-box incharia por essa diferenca.
+        el.style.setProperty('box-sizing', 'border-box', 'important');
         el.style.setProperty('position', 'absolute', 'important');
-        el.style.setProperty('top', rect.top + window.scrollY + 'px', 'important');
-        el.style.setProperty('left', rect.left + window.scrollX + 'px', 'important');
-        el.style.setProperty('width', rect.width + 'px', 'important');
-        el.style.setProperty('height', rect.height + 'px', 'important');
+        el.style.setProperty('width', layout.width + 'px', 'important');
+        el.style.setProperty('height', layout.height + 'px', 'important');
         el.style.setProperty('right', 'auto', 'important');
         el.style.setProperty('bottom', 'auto', 'important');
+
+        let top = layout.top + window.scrollY;
+        let left = layout.left + window.scrollX;
+        el.style.setProperty('top', top + 'px', 'important');
+        el.style.setProperty('left', left + 'px', 'important');
+
+        // (2) confere onde o elemento realmente foi parar e corrige o desvio.
+        const landed = el.getBoundingClientRect();
+        const dx = visual.left - landed.left;
+        const dy = visual.top - landed.top;
+        if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+          el.style.setProperty('top', top + dy + 'px', 'important');
+          el.style.setProperty('left', left + dx + 'px', 'important');
+        }
+
         el.setAttribute('data-w2f-was-fixed', '1');
       }
 
       return targets.length;
+    },
+
+    /**
+     * Esconde tudo que atravessa a regiao de um shot sem fazer parte dele.
+     *
+     * Um screenshot recorta a tela, nao o elemento: a primeira versao trouxe o
+     * header, o logo e as setas do carrossel gravados dentro do quadro do
+     * video — e esses mesmos elementos ainda vinham como nos por cima, entao
+     * cada texto aparecia duas vezes no Figma.
+     *
+     * `visibility: hidden` de proposito, em vez de `display: none`: o elemento
+     * some sem sair do fluxo, entao a geometria da pagina nao muda e as
+     * coordenadas do recorte continuam validas. Ancestrais e descendentes do
+     * alvo ficam de fora — esconder um ancestral esconderia o alvo junto.
+     */
+    beginShot(id) {
+      const target = shotTargets.get(id);
+      if (!target) return false;
+
+      const box = target.getBoundingClientRect();
+      maskedForShot = [];
+
+      for (const el of document.querySelectorAll('*')) {
+        if (el === target || el.contains(target) || target.contains(el)) continue;
+
+        const rect = el.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) continue;
+        if (rect.right <= box.left || rect.left >= box.right) continue;
+        if (rect.bottom <= box.top || rect.top >= box.bottom) continue;
+
+        maskedForShot.push({
+          el,
+          value: el.style.getPropertyValue('visibility'),
+          priority: el.style.getPropertyPriority('visibility'),
+        });
+        el.style.setProperty('visibility', 'hidden', 'important');
+      }
+
+      return true;
+    },
+
+    /** Desfaz o que beginShot escondeu. */
+    endShot() {
+      for (const { el, value, priority } of maskedForShot) {
+        if (value) el.style.setProperty('visibility', value, priority);
+        else el.style.removeProperty('visibility');
+      }
+      const count = maskedForShot.length;
+      maskedForShot = [];
+      return count;
     },
 
     /**
@@ -1333,11 +1594,14 @@
     },
 
     extract(userOpts) {
+      // allowShots so vale para quem controla o browser (o servidor). Na
+      // extensao o extractor roda dentro da pagina, sem acesso a screenshot.
       const opts = Object.assign(
-        { simplify: 'empty', maxDepth: 60, maxSvgBytes: 400000, keepInvisible: false },
+        { simplify: 'empty', maxDepth: 60, maxSvgBytes: 400000, keepInvisible: false, allowShots: false },
         userOpts || {}
       );
 
+      shotTargets = new Map(); // uma extracao nao herda os alvos da anterior
       const ctx = createContext(opts);
       ctx.stats = { elements: 0, dropped: 0, collapsed: 0, offscreen: 0, collapsedDetails: 0 };
       ctx.docWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
