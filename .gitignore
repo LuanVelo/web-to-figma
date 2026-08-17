@@ -1,10 +1,19 @@
 # dependências
 node_modules/
 
-# capturas geradas
+# Capturas geradas.
+#
+# Uma captura carrega a pagina inteira, com as imagens em base64 dentro do
+# JSON. Se ela vier de um site logado, leva junto o que estava na tela. Nada
+# disso pode acabar num commit — por isso a pasta `capturas/` e ignorada por
+# inteiro: e onde salvar a saida do /import e os previews.
+capturas/
 *.w2f
+*.capture.json
 *.preview.png
+*.preview.html
 *.compare.html
+*.compare.png
 
 # builds do Safari (o app sai em /tmp e vai para /Applications)
 safari/build/

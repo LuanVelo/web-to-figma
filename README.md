@@ -122,32 +122,34 @@ O plugin procura a fonte original no seu Figma. Se não estiver instalada, cai p
 
 Servem para conferir uma conversão sem abrir o Figma.
 
+> Salve as capturas em `capturas/` — a pasta é ignorada pelo git. Uma captura leva a página inteira, com as imagens embutidas: se veio de um site logado, leva junto o que estava na tela.
+
 **Testar o caminho da extensão** — faz o mesmo que a extensão faz e grava o `.w2f`:
 
 ```bash
-node tools/test-extension.mjs https://exemplo.com captura.w2f
+node tools/test-extension.mjs https://exemplo.com capturas/captura.w2f
 ```
 
 **Simular o plugin** — roda `plugin/code.js` de verdade contra um stub da Plugin API que reproduz as validações do Figma (fonte carregada antes de escrever texto, ranges dentro dos limites, formatos de imagem aceitos):
 
 ```bash
-node tools/simulate.mjs captura.w2f
+node tools/simulate.mjs capturas/captura.w2f
 ```
 
 ```bash
-node tools/simulate.mjs captura.w2f --fonts=poucas
+node tools/simulate.mjs capturas/captura.w2f --fonts=poucas
 ```
 
 **Preview de fidelidade** — redesenha a árvore com as mesmas regras do plugin e gera um PNG:
 
 ```bash
-node tools/preview.mjs captura.w2f saida.png
+node tools/preview.mjs capturas/captura.w2f capturas/saida.png
 ```
 
 **Comparar com o original** — lado a lado com a página real (precisa do servidor no ar):
 
 ```bash
-node tools/compare.mjs saida.png real.png comparacao.png 0 1000
+node tools/compare.mjs capturas/saida.png capturas/real.png capturas/comparacao.png 0 1000
 ```
 
 **Testar a UI do plugin** — carrega `plugin/ui.html` com servidor e main thread falsos, e exercita a fila da aba URL (ordem, um site de cada vez, erro no meio, estado dos campos). Não precisa de servidor nem do Figma:
